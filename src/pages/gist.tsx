@@ -173,8 +173,10 @@ export function GistPage() {
   }
 
   function handleCopy(content: string) {
-    navigator.clipboard.writeText(content)
-    toast.success("Copied to clipboard.")
+    navigator.clipboard.writeText(content).then(
+      () => toast.success("Copied to clipboard."),
+      () => toast.error("Failed to copy to clipboard.")
+    )
   }
 
   const selectedInView = filtered.filter((g) => selected.has(g.id))
