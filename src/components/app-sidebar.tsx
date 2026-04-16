@@ -24,6 +24,10 @@ const navItems = [
     title: "Date & Time",
     items: [{ title: "Timestamp", url: "/timestamp" }],
   },
+  {
+    title: "Storage",
+    items: [{ title: "Gist", url: "/gist" }],
+  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

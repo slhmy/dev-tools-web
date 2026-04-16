@@ -8,6 +8,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Base64Page } from "@/pages/base64"
+import { GistPage } from "@/pages/gist"
 import { HomePage } from "@/pages/home"
 import { TimestampPage } from "@/pages/timestamp"
 
@@ -26,6 +27,7 @@ export function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/base64" element={<Base64Page />} />
                 <Route path="/timestamp" element={<TimestampPage />} />
+                <Route path="/gist" element={<GistPage />} />
               </Routes>
             </main>
           </SidebarInset>
