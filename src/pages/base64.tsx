@@ -1,21 +1,20 @@
 import { useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 export function Base64Page() {
   const [input, setInput] = useState("")
   const [output, setOutput] = useState("")
-  const [error, setError] = useState("")
 
   function encode() {
     try {
       const bytes = new TextEncoder().encode(input)
       const binary = String.fromCharCode(...bytes)
       setOutput(btoa(binary))
-      setError("")
     } catch {
-      setError("Encoding failed. Make sure the input is valid text.")
+      toast.error("Encoding failed. Make sure the input is valid text.")
     }
   }
 
@@ -24,9 +23,8 @@ export function Base64Page() {
       const binary = atob(input)
       const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
       setOutput(new TextDecoder().decode(bytes))
-      setError("")
     } catch {
-      setError("Decoding failed. Make sure the input is valid Base64.")
+      toast.error("Decoding failed. Make sure the input is valid Base64.")
     }
   }
 
@@ -40,7 +38,8 @@ export function Base64Page() {
       </div>
       <div className="flex flex-col gap-3">
         <label className="text-sm font-medium">Input</label>
-        <Input
+        <Textarea
+          rows={6}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Enter text or Base64 string..."
@@ -52,13 +51,15 @@ export function Base64Page() {
           </Button>
         </div>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
       {output && (
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium">Output</label>
-          <div className="rounded-md border bg-muted px-3 py-2 font-mono text-sm break-all">
-            {output}
-          </div>
+          <Textarea
+            rows={6}
+            readOnly
+            value={output}
+            className="font-mono"
+          />
           <Button
             variant="outline"
             size="sm"
