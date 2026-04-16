@@ -28,6 +28,10 @@ const navItems = [
     title: "Storage",
     items: [{ title: "Gist", url: "/gist" }],
   },
+  {
+    title: "Image",
+    items: [{ title: "QR Code", url: "/qrcode" }],
+  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
