@@ -3,30 +3,52 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+type TimestampFormats = {
+  unix: string
+  unixMilli: string
+  unixNano: string
+  iso: string
+}
+
+function detectAndConvert(raw: string): TimestampFormats | null {
+  const num = Number(raw.trim())
+  if (!raw.trim() || isNaN(num)) return null
+
+  const len = String(Math.trunc(num)).length
+  let ms: number
+  if (len <= 10) {
+    ms = num * 1000
+  } else if (len <= 13) {
+    ms = num
+  } else {
+    ms = Math.trunc(num / 1_000_000)
+  }
+
+  const date = new Date(ms)
+  if (isNaN(date.getTime())) return null
+
+  const unix = String(Math.trunc(ms / 1000))
+  const unixMilli = String(ms)
+  const unixNano = String(BigInt(ms) * 1_000_000n)
+  return { unix, unixMilli, unixNano, iso: date.toISOString() }
+}
+
 export function TimestampPage() {
   const [tsInput, setTsInput] = useState("")
   const [dateInput, setDateInput] = useState("")
-  const [tsResult, setTsResult] = useState("")
-  const [dateResult, setDateResult] = useState("")
+  const [tsResult, setTsResult] = useState<TimestampFormats | null>(null)
+  const [dateResult, setDateResult] = useState<TimestampFormats | null>(null)
   const [tsError, setTsError] = useState("")
   const [dateError, setDateError] = useState("")
 
   function convertTimestamp() {
-    const num = Number(tsInput.trim())
-    if (!tsInput.trim() || isNaN(num)) {
-      setTsError("Enter a valid Unix timestamp (seconds or milliseconds).")
-      setTsResult("")
+    const result = detectAndConvert(tsInput)
+    if (!result) {
+      setTsError("Enter a valid Unix timestamp (seconds, milliseconds, or nanoseconds).")
+      setTsResult(null)
       return
     }
-    // Detect seconds vs milliseconds
-    const ms = String(num).length <= 10 ? num * 1000 : num
-    const date = new Date(ms)
-    if (isNaN(date.getTime())) {
-      setTsError("Invalid timestamp.")
-      setTsResult("")
-      return
-    }
-    setTsResult(date.toISOString())
+    setTsResult(result)
     setTsError("")
   }
 
@@ -34,17 +56,29 @@ export function TimestampPage() {
     const date = new Date(dateInput.trim())
     if (isNaN(date.getTime())) {
       setDateError("Enter a valid date string (e.g. 2024-01-01 or ISO 8601).")
-      setDateResult("")
+      setDateResult(null)
       return
     }
-    setDateResult(String(Math.floor(date.getTime() / 1000)))
+    const ms = date.getTime()
+    setDateResult({
+      unix: String(Math.trunc(ms / 1000)),
+      unixMilli: String(ms),
+      unixNano: String(BigInt(ms) * 1_000_000n),
+      iso: date.toISOString(),
+    })
     setDateError("")
   }
 
   function useNow() {
-    const now = Math.floor(Date.now() / 1000)
-    setTsInput(String(now))
-    setTsResult(new Date(now * 1000).toISOString())
+    const ms = Date.now()
+    const unix = String(Math.trunc(ms / 1000))
+    setTsInput(unix)
+    setTsResult({
+      unix,
+      unixMilli: String(ms),
+      unixNano: String(BigInt(ms) * 1_000_000n),
+      iso: new Date(ms).toISOString(),
+    })
     setTsError("")
   }
 
@@ -72,20 +106,7 @@ export function TimestampPage() {
           </Button>
         </div>
         {tsError && <p className="text-sm text-destructive">{tsError}</p>}
-        {tsResult && (
-          <div className="flex items-center gap-2">
-            <div className="rounded-md border bg-muted px-3 py-2 font-mono text-sm">
-              {tsResult}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigator.clipboard.writeText(tsResult)}
-            >
-              Copy
-            </Button>
-          </div>
-        )}
+        {tsResult && <TimestampResultTable result={tsResult} />}
       </div>
 
       {/* Date → Timestamp */}
@@ -100,21 +121,39 @@ export function TimestampPage() {
           <Button onClick={convertDate}>Convert</Button>
         </div>
         {dateError && <p className="text-sm text-destructive">{dateError}</p>}
-        {dateResult && (
-          <div className="flex items-center gap-2">
-            <div className="rounded-md border bg-muted px-3 py-2 font-mono text-sm">
-              {dateResult}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigator.clipboard.writeText(dateResult)}
-            >
-              Copy
-            </Button>
-          </div>
-        )}
+        {dateResult && <TimestampResultTable result={dateResult} />}
       </div>
+    </div>
+  )
+}
+
+function TimestampResultTable({ result }: { result: TimestampFormats }) {
+  const rows: { label: string; value: string }[] = [
+    { label: "ISO 8601", value: result.iso },
+    { label: "Unix (s)", value: result.unix },
+    { label: "Unix Milli (ms)", value: result.unixMilli },
+    { label: "Unix Nano (ns)", value: result.unixNano },
+  ]
+
+  return (
+    <div className="flex flex-col gap-1">
+      {rows.map(({ label, value }) => (
+        <div key={label} className="flex items-center gap-2">
+          <span className="w-36 shrink-0 text-xs text-muted-foreground">
+            {label}
+          </span>
+          <div className="rounded-md border bg-muted px-3 py-2 font-mono text-sm">
+            {value}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigator.clipboard.writeText(value)}
+          >
+            Copy
+          </Button>
+        </div>
+      ))}
     </div>
   )
 }
