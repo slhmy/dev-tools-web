@@ -11,6 +11,7 @@ import { Base64Page } from "@/pages/base64"
 import { GistPage } from "@/pages/gist"
 import { HomePage } from "@/pages/home"
 import { QRCodePage } from "@/pages/qrcode"
+import { StringLengthPage } from "@/pages/string-length"
 import { TimestampPage } from "@/pages/timestamp"
 
 export function App() {
@@ -30,6 +31,7 @@ export function App() {
                 <Route path="/timestamp" element={<TimestampPage />} />
                 <Route path="/gist" element={<GistPage />} />
                 <Route path="/qrcode" element={<QRCodePage />} />
+                <Route path="/string-length" element={<StringLengthPage />} />
               </Routes>
             </main>
           </SidebarInset>
