@@ -32,6 +32,10 @@ const navItems = [
     title: "Image",
     items: [{ title: "QR Code", url: "/qrcode" }],
   },
+  {
+    title: "String",
+    items: [{ title: "String Length", url: "/string-length" }],
+  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
