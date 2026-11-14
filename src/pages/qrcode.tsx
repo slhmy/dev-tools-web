@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useCallback } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import jsQR from "jsqr"
 import { toast } from "sonner"
@@ -12,6 +12,7 @@ export function QRCodePage() {
 
   // Decode section
   const [decodeResult, setDecodeResult] = useState("")
+  const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function downloadQR() {
@@ -28,10 +29,7 @@ export function QRCodePage() {
     URL.revokeObjectURL(url)
   }
 
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const decodeFile = useCallback((file: File) => {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const img = new Image()
@@ -54,6 +52,12 @@ export function QRCodePage() {
       img.src = ev.target?.result as string
     }
     reader.readAsDataURL(file)
+  }, [])
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    decodeFile(file)
     // Reset so re-uploading same file fires change event
     e.target.value = ""
   }
@@ -101,7 +105,25 @@ export function QRCodePage() {
       {/* Decode */}
       <div className="flex flex-col gap-4">
         <h2 className="text-base font-medium">QR Code → Text</h2>
-        <div>
+        <div
+          className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors ${isDragOver ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"}`}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragOver(true)
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIsDragOver(false)
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault()
+            setIsDragOver(false)
+            const file = e.dataTransfer.files?.[0]
+            if (file) decodeFile(file)
+          }}
+        >
           <input
             ref={fileInputRef}
             type="file"
@@ -109,12 +131,12 @@ export function QRCodePage() {
             className="hidden"
             onChange={handleImageUpload}
           />
-          <Button
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            Upload QR Code Image
-          </Button>
+          <p className="text-sm text-muted-foreground">
+            Drag &amp; drop a QR code image here, or{" "}
+            <span className="text-foreground underline underline-offset-2">
+              click to upload
+            </span>
+          </p>
         </div>
         {decodeResult && (
           <div className="flex flex-col gap-2">
